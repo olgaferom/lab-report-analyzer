@@ -1,0 +1,1 @@
+module.exports = require('./Users/olga/netlify/functions/analyze/analyze.js')

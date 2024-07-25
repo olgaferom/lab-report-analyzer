@@ -1,0 +1,1 @@
+module.exports = require('./Users/olga/netlify/functions/hello/hello.js')

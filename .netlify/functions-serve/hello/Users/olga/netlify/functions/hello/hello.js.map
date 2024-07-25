@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../Users/olga/netlify/functions/hello/hello.js"],
+  "sourceRoot": "/var/folders/g2/z_jk012949j_lq8j2mt79q5w0000gn/T/tmp-80591-TR0zfTzoyV7T",
+  "sourcesContent": ["// Docs on event and context https://docs.netlify.com/functions/build/#code-your-function-2\nconst handler = async (event) => {\n  try {\n    const subject = event.queryStringParameters.name || 'World'\n    return {\n      statusCode: 200,\n      body: JSON.stringify({ message: `Hello ${subject}` }),\n      // // more keys you can return:\n      // headers: { \"headerName\": \"headerValue\", ... },\n      // isBase64Encoded: true,\n    }\n  } catch (error) {\n    return { statusCode: 500, body: error.toString() }\n  }\n}\n\nmodule.exports = { handler }\n"],
+  "mappings": ";AACA,IAAM,UAAU,OAAO,UAAU;AAC/B,MAAI;AACF,UAAM,UAAU,MAAM,sBAAsB,QAAQ;AACpD,WAAO;AAAA,MACL,YAAY;AAAA,MACZ,MAAM,KAAK,UAAU,EAAE,SAAS,SAAS,OAAO,GAAG,CAAC;AAAA;AAAA;AAAA;AAAA,IAItD;AAAA,EACF,SAAS,OAAO;AACd,WAAO,EAAE,YAAY,KAAK,MAAM,MAAM,SAAS,EAAE;AAAA,EACnD;AACF;AAEA,OAAO,UAAU,EAAE,QAAQ;",
+  "names": []
+}

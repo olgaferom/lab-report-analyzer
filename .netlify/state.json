@@ -1,0 +1,20 @@
+{
+	"siteId": "9f474b22-ed6f-48e3-a8a6-39d2125e0eac",
+	"geolocation": {
+		"data": {
+			"city": "Almagro",
+			"country": {
+				"code": "ES",
+				"name": "Spain"
+			},
+			"subdivision": {
+				"code": "CM",
+				"name": "Castille-La Mancha"
+			},
+			"timezone": "Europe/Madrid",
+			"latitude": 38.8855,
+			"longitude": -3.7112
+		},
+		"timestamp": 1721935433481
+	}
+}

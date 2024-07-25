@@ -1,0 +1,14 @@
+[build]
+  base = "."
+  command = "cd frontend && npm install && npm run build"
+  publish = "frontend/build"
+  functions = "netlify/functions"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
