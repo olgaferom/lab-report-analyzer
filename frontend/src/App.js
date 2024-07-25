@@ -1,86 +1,70 @@
 import React, { useState } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
 import axios from 'axios';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+import './App.css';
 
 function App() {
   const [file, setFile] = useState(null);
-  const [numPages, setNumPages] = useState(null);
-  const [pageNumber, setPageNumber] = useState(1);
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onFileChange = (event) => {
+  const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
-    console.log('File selected:', selectedFile);
     setFile(selectedFile);
-    setError(null);
-    setAnalysis(null);
+    console.log('Archivo seleccionado:', selectedFile.name);
   };
 
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    console.log('PDF loaded successfully');
-    setNumPages(numPages);
-  };
-
-  const analyzeReport = async () => {
+  const handleAnalyze = async () => {
     if (!file) {
-      setError('Por favor, selecciona un archivo PDF primero.');
+      setError('Por favor, selecciona un archivo primero.');
       return;
     }
-  
+
+    setIsLoading(true);
+    setError(null);
+
     const formData = new FormData();
     formData.append('file', file);
-  
+
     try {
-      console.log('Enviando solicitud a la función analyze');
-      console.log('Archivo a enviar:', file);
+      console.log('Iniciando llamada a la función analyze');
+      
       const response = await axios.post('/.netlify/functions/analyze', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      console.log('Respuesta completa:', response);
-      console.log('Datos de la respuesta:', response.data);
+
+      console.log('Respuesta recibida:', response.data);
       setAnalysis(response.data);
     } catch (error) {
-      console.error('Error al analizar el informe:', error);
-      console.error('Detalles del error:', error.response ? error.response.data : 'No hay detalles disponibles');
-      setError(`Error al analizar el informe: ${error.message}`);
+      console.error('Error al llamar a la función:', error);
+      setError('Hubo un error al analizar el archivo. Por favor, intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="App">
-      <h1>Analizador de Informes de Laboratorio</h1>
-      <input type="file" onChange={onFileChange} accept=".pdf" />
-      {error && <p style={{color: 'red'}}>{error}</p>}
-      {file && (
-        <div>
-          <Document
-            file={file}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={(error) => {
-              console.error('Error al cargar el PDF:', error);
-              setError(`Error al cargar el PDF: ${error.message}`);
-            }}
-          >
-            <Page pageNumber={pageNumber} />
-          </Document>
-          {numPages && <p>Página {pageNumber} de {numPages}</p>}
-          <button onClick={analyzeReport}>Analizar Informe</button>
+      <header className="App-header">
+        <h1>Analizador de Informes de Laboratorio</h1>
+      </header>
+      <main>
+        <div className="file-input">
+          <input type="file" onChange={handleFileChange} accept=".pdf" />
         </div>
-      )}
-      {analysis && (
-        <div>
-          <h2>Resultados del Análisis:</h2>
-          <p>Nombre del archivo: {analysis.filename}</p>
-          <p>Número de páginas: {analysis.numPages}</p>
-          <p>Extracto del texto:</p>
-          <pre>{analysis.text}</pre>
-        </div>
-      )}
+        <button onClick={handleAnalyze} disabled={!file || isLoading}>
+          {isLoading ? 'Analizando...' : 'Analizar'}
+        </button>
+        {error && <p className="error-message">{error}</p>}
+        {analysis && (
+          <div className="analysis-results">
+            <h2>Resultados del Análisis:</h2>
+            <pre>{JSON.stringify(analysis, null, 2)}</pre>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
