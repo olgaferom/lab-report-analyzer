@@ -1,6 +1,5 @@
 const { Configuration, OpenAIApi } = require("openai");
 const multipart = require('parse-multipart');
-const RateLimiter = require('lambda-rate-limiter');
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
