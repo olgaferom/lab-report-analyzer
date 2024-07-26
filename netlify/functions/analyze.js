@@ -2,11 +2,6 @@ const { Configuration, OpenAIApi } = require("openai");
 const multipart = require('parse-multipart');
 const RateLimiter = require('lambda-rate-limiter');
 
-const rateLimit = rateLimiter({
-  interval: 60000, // 1 minuto
-  uniqueTokenPerInterval: 500 // Máximo número de usuarios únicos por intervalo
-});
-
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -36,17 +31,6 @@ async function analyzeTextWithGPT(text) {
 
 exports.handler = async function(event, context) {
   console.log('INICIO: Función analyze iniciada');
-
-  try {
-    // Aplicar limitación de velocidad
-    await rateLimit.check(1, 'API_CALL'); // Limita a 1 llamada por minuto
-  } catch (error) {
-    console.error('Límite de velocidad excedido');
-    return {
-      statusCode: 429,
-      body: JSON.stringify({ error: 'Too Many Requests. Please try again later.' })
-    };
-  }
 
   if (event.httpMethod !== 'POST') {
     console.error('Método no permitido');
