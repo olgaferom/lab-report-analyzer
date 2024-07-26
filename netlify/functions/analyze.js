@@ -1,6 +1,11 @@
-const multipart = require('parse-multipart');
-const pdf = require('pdf-parse');
 const { Configuration, OpenAIApi } = require("openai");
+const multipart = require('parse-multipart');
+const RateLimiter = require('lambda-rate-limiter');
+
+const rateLimit = rateLimiter({
+  interval: 60000, // 1 minuto
+  uniqueTokenPerInterval: 500 // Máximo número de usuarios únicos por intervalo
+});
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -22,23 +27,29 @@ async function analyzeTextWithGPT(text) {
     return response.data.choices[0].message.content;
   } catch (error) {
     console.error('Error en analyzeTextWithGPT:', error);
+    if (error.response && error.response.status === 429) {
+      throw new Error('Se ha excedido el límite de solicitudes a la API de OpenAI. Por favor, intente nuevamente más tarde.');
+    }
     throw error;
   }
 }
 
 exports.handler = async function(event, context) {
-  // Logs forzados al inicio de la función
-  console.log('Función analyze iniciada - Log de prueba');
-  console.log('Método HTTP:', event.httpMethod);
-  console.log('Headers:', JSON.stringify(event.headers));
-  console.log('Body length:', event.body ? event.body.length : 0);
+  console.log('INICIO: Función analyze iniciada');
 
-  // Continuamos con la lógica original de la función
-  console.log('Función analyze iniciada');
-  console.log('Método HTTP:', event.httpMethod);
+  try {
+    // Aplicar limitación de velocidad
+    await rateLimit.check(1, 'API_CALL'); // Limita a 1 llamada por minuto
+  } catch (error) {
+    console.error('Límite de velocidad excedido');
+    return {
+      statusCode: 429,
+      body: JSON.stringify({ error: 'Too Many Requests. Please try again later.' })
+    };
+  }
 
   if (event.httpMethod !== 'POST') {
-    console.log('Método no permitido');
+    console.error('Método no permitido');
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
@@ -49,20 +60,18 @@ exports.handler = async function(event, context) {
     const parts = multipart.Parse(Buffer.from(body, 'base64'), boundary);
 
     if (parts.length === 0) {
-      console.log('No se recibió ningún archivo');
+      console.error('No se recibió ningún archivo');
       throw new Error('No se recibió ningún archivo');
     }
 
     const { filename, data } = parts[0];
     console.log('Archivo recibido:', filename);
 
-    console.log('Extrayendo texto del PDF');
-    const pdfData = await pdf(data);
-    const text = pdfData.text;
-    console.log('Texto extraído del PDF, longitud:', text.length);
+    const text = data.toString('utf-8').slice(0, 4000);
+    console.log('Longitud del texto a analizar:', text.length);
 
     console.log('Iniciando análisis del texto');
-    const analysis = await analyzeTextWithGPT(text.slice(0, 4000)); // Limitamos a 4000 caracteres para este ejemplo
+    const analysis = await analyzeTextWithGPT(text);
 
     console.log('Análisis completado, preparando respuesta');
     const response = {
@@ -70,19 +79,22 @@ exports.handler = async function(event, context) {
       body: JSON.stringify({ 
         message: "Análisis completado",
         filename: filename,
-        numPages: pdfData.numpages,
         analysis: analysis
       })
     };
 
-    console.log('Función analyze finalizada con éxito');
+    console.log('FIN: Función analyze finalizada con éxito');
     return response;
   } catch (error) {
-    console.error('Error en la función:', error);
-    console.log('Función analyze finalizada con error');
+    console.error('Error detallado:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    console.log('FIN: Función analyze finalizada con error');
     return { 
       statusCode: 500, 
-      body: JSON.stringify({ error: 'Error al procesar el archivo', details: error.message }) 
+      body: JSON.stringify({ 
+        error: 'Error al procesar el archivo', 
+        details: error.message, 
+        stack: error.stack
+      }) 
     };
   }
 };

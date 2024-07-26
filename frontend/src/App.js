@@ -39,7 +39,11 @@ function App() {
       setAnalysis(response.data);
     } catch (error) {
       console.error('Error al llamar a la función:', error);
-      setError('Hubo un error al analizar el archivo. Por favor, intenta de nuevo.');
+    if (error.response && error.response.data && error.response.data.details) {
+      setError(`Error al analizar el archivo: ${error.response.data.details}`);
+    } else {
+      setError('Hubo un error al analizar el archivo. Por favor, intenta de nuevo más tarde.');
+    }
     } finally {
       setIsLoading(false);
     }

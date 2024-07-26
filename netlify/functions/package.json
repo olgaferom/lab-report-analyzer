@@ -15,8 +15,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "openai": "^3.3.0",
-    "parse-multipart": "^1.0.4",
-    "pdf-parse": "^1.1.1"
+    "lambda-rate-limiter": "^4.0.0",
+    "openai": "^3.2.1",
+    "parse-multipart": "^1.0.4"
   }
 }
